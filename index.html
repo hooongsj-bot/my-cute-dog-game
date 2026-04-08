@@ -188,29 +188,38 @@
     myScoreEl.innerText = personalScore;
   }
 
+  // 이미지 절대경로로 미리 저장
+  const BASE = location.href.replace(/\/[^/]*$/, '/');
+  const IMG_NORMAL = BASE + 'normal.png';
+  const IMG_OPEN   = BASE + 'open.png';
+
+  // 이미지 미리 로드
+  const preloadOpen = new Image(); preloadOpen.src = IMG_OPEN;
+
   // Handle Press (Open Mouth)
   function handlePress(e) {
-    if(e.type === 'touchstart' && e.cancelable) e.preventDefault(); // prevent double firing
-    
-    // 1. Play sound & animate
-    playPopSound();
-    avatarEl.src = 'open.png';
+    if(e.type === 'touchstart' && e.cancelable) e.preventDefault();
+
+    // 1. 이미지 교체 (가장 먼저!)
+    avatarEl.src = IMG_OPEN;
     avatarEl.classList.add('clicked');
-    
-    // 2. Update scores
+
+    // 2. 사운드
+    playPopSound();
+
+    // 3. 점수
     personalScore++;
     pendingClicks++;
-    
     myScoreEl.innerText = personalScore;
     localStorage.setItem('personal_score', personalScore);
-    
-    // 3. Floating particle
-    createFloatingParticle(e);
+
+    // 4. 파티클 (에러나도 이미지 교체에 영향 없게 try-catch)
+    try { createFloatingParticle(e); } catch(_) {}
   }
 
   // Handle Release (Close Mouth)
   function handleRelease(e) {
-    avatarEl.src = 'normal.png';
+    avatarEl.src = IMG_NORMAL;
     avatarEl.classList.remove('clicked');
   }
 
