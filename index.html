@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>국가 대표 배틀: 클릭 게임</title>
+<!-- Google Fonts: Gaegu (Korean Doodle Font) -->
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+     --bg-color: #F8F5EE; /* Light cream */
+     --text-color: #2D2D2D;
+     --border-color: #111;
+     --team-a-color: #FF8C8C; /* Pastel Red for Korea */
+     --team-b-color: #8C9EFF; /* Pastel Blue for Global/Other */
+  }
+  body, html {
+    margin: 0; padding: 0;
+    width: 100%; height: 100%;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: 'Gaegu', cursive;
+    overflow: hidden;
+  }
+  
+  /* Doodle aesthetic styles */
+  .doodle-box {
+    border: 4px solid var(--border-color);
+    border-radius: 20px;
+    box-shadow: 4px 4px 0px var(--border-color);
+    background: #fff;
+  }
+  
+  /* Buttons */
+  button.doodle-btn {
+    border: 4px solid var(--border-color);
+    border-radius: 30px;
+    box-shadow: 4px 4px 0px var(--border-color);
+    font-family: 'Gaegu', cursive;
+    font-size: 1.5rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.05s, box-shadow 0.05s;
+    user-select: none;
+  }
+  button.doodle-btn:active {
+    transform: translate(4px, 4px);
+    box-shadow: 0px 0px 0px var(--border-color);
+  }
+  
+  #game-screen {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    overflow-y: auto;
+    justify-content: center;
+  }
+  
+  .game-header {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  .game-header h1 {
+    font-size: 3.5rem; margin: 0; text-shadow: 2px 2px 0px #fff;
+  }
+  .game-header p {
+    font-size: 1.5rem; margin: 0; color: #555;
+  }
+  
+  .scoreboard {
+    width: 100%; max-width: 800px;
+    display: flex; justify-content: space-between;
+    font-size: 4rem; font-weight: bold;
+    margin-bottom: 10px;
+    padding: 0 40px;
+    box-sizing: border-box;
+  }
+  #score-a { color: #D32F2F; text-shadow: 2px 2px 0px #fff; }
+  #score-b { color: #1976D2; text-shadow: 2px 2px 0px #fff; }
+  
+  .gauge-container {
+    width: 100%; max-width: 800px;
+    height: 70px;
+    background: #eee;
+    border: 5px solid var(--border-color);
+    border-radius: 35px;
+    overflow: hidden;
+    display: flex;
+    box-shadow: inset 0px 6px 15px rgba(0,0,0,0.15), 4px 5px 0px var(--border-color);
+    margin-bottom: 60px;
+    position: relative;
+  }
+  /* center line marker */
+  .gauge-container::after {
+    content: ''; position: absolute; left: 50%; top: 0; bottom: 0;
+    width: 4px; background: rgba(0,0,0,0.2); transform: translateX(-50%);
+  }
+  .gauge-a {
+    height: 100%; background-color: var(--team-a-color);
+    width: 50%; transition: width 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+  }
+  .gauge-b {
+    height: 100%; background-color: var(--team-b-color);
+    width: 50%; transition: width 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+  }
+
+  .teams {
+    display: flex; justify-content: space-around; width: 100%; max-width: 800px;
+  }
+  .team-card {
+    display: flex; flex-direction: column; align-items: center; width: 45%;
+  }
+  .team-char {
+    font-size: 6rem; line-height: 1; margin-bottom: 20px;
+    animation: float 3s ease-in-out infinite;
+    filter: drop-shadow(4px 4px 0px rgba(0,0,0,0.2));
+  }
+  .team-card:nth-child(2) .team-char {
+    animation-delay: 1.5s;
+  }
+  @keyframes float {
+    0%   { transform: translateY(0px) rotate(0deg); }
+    50%  { transform: translateY(-15px) rotate(5deg); }
+    100% { transform: translateY(0px) rotate(0deg); }
+  }
+  
+  .click-btn {
+    width: 100%; padding: 25px 0; font-size: 2.2rem;
+  }
+  .btn-a { background-color: var(--team-a-color); }
+  .btn-b { background-color: var(--team-b-color); background-image: linear-gradient(to right, rgba(255,255,255,0.4), rgba(255,255,255,0.4)); }
+
+  /* Floating UI for visual feedback */
+  .floating-text {
+    position: absolute;
+    font-size: 2.5rem; font-weight: bold; pointer-events: none;
+    animation: fadeup 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    z-index: 100;
+    text-shadow: 2px 2px 0px #fff, -1px -1px 0px #fff;
+  }
+  @keyframes fadeup {
+    0% { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
+    100% { opacity: 0; transform: translateY(-120px) scale(1.5) rotate(15deg); }
+  }
+
+</style>
+</head>
+<body>
+
+<!-- GAME SCREEN -->
+<div id="game-screen">
+  <div class="game-header">
+    <h1>🌍 전 세계 국가 배틀!</h1>
+    <p>나라를 대표하여 마구 클릭하세요!</p>
+  </div>
+  
+  <div class="scoreboard">
+    <div id="score-a">0</div>
+    <div id="score-b">0</div>
+  </div>
+  
+  <div class="gauge-container">
+    <div class="gauge-a" id="gauge-a"></div>
+    <div class="gauge-b" id="gauge-b"></div>
+  </div>
+  
+  <div class="teams">
+    <div class="team-card">
+      <div class="team-char">🇰🇷</div>
+      <button class="doodle-btn click-btn btn-a" id="btn-a" onclick="clickTeam('team_korea', event)">대한민국 클릭!</button>
+    </div>
+    <div class="team-card">
+      <div class="team-char">🌐</div>
+      <button class="doodle-btn click-btn btn-b" id="btn-b" onclick="clickTeam('team_global', event)">글로벌 연합 클릭!</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const scoreADisplay = document.getElementById('score-a');
+  const scoreBDisplay = document.getElementById('score-b');
+  const gaugeA = document.getElementById('gauge-a');
+  const gaugeB = document.getElementById('gauge-b');
+
+  let scores = { team_korea: 0, team_global: 0 };
+
+  function init() {
+    // Load from local storage
+    const savedA = localStorage.getItem('team_korea_score');
+    const savedB = localStorage.getItem('team_global_score');
+    
+    if (savedA) scores.team_korea = parseInt(savedA, 10);
+    if (savedB) scores.team_global = parseInt(savedB, 10);
+    
+    updateUI();
+    
+    // 같은 기기에서 창 여러개 띄웠을때 서로 갱신되게 처리
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'team_korea_score' || e.key === 'team_global_score') {
+        scores.team_korea = parseInt(localStorage.getItem('team_korea_score') || '0', 10);
+        scores.team_global = parseInt(localStorage.getItem('team_global_score') || '0', 10);
+        updateUI();
+      }
+    });
+  }
+
+  function updateUI() {
+    scoreADisplay.innerText = scores.team_korea;
+    scoreBDisplay.innerText = scores.team_global;
+
+    const total = scores.team_korea + scores.team_global;
+    let aPercent = 50;
+    if (total > 0) {
+       aPercent = (scores.team_korea / total) * 100;
+    }
+    
+    // 게이지가 너무 한쪽으로 치우쳐서 사라지지 않게 약간의 여백 
+    if (total > 0) {
+        aPercent = Math.max(5, Math.min(95, aPercent));
+    }
+    
+    gaugeA.style.width = aPercent + '%';
+    gaugeB.style.width = (100 - aPercent) + '%';
+  }
+
+  function createFloatingText(x, y, color) {
+    const el = document.createElement('div');
+    el.innerText = '+1';
+    el.className = 'floating-text';
+    el.style.left = (x - 20) + 'px';
+    el.style.top = (y - 20) + 'px';
+    el.style.color = color;
+    document.body.appendChild(el);
+    setTimeout(() => { document.body.removeChild(el); }, 800);
+  }
+
+  function clickTeam(teamId, e) {
+    scores[teamId]++;
+    
+    // Save to local storage
+    localStorage.setItem(teamId + '_score', scores[teamId]);
+    
+    updateUI();
+    
+    // 파티클 애니메이션
+    const rect = e.target.getBoundingClientRect();
+    const x = e.clientX || rect.left + rect.width / 2;
+    const y = e.clientY || rect.top;
+    const color = teamId === 'team_korea' ? '#D32F2F' : '#1976D2';
+    createFloatingText(x, y, color);
+  }
+
+  init();
+
+</script>
+</body>
+</html>
