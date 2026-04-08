@@ -188,18 +188,15 @@
     myScoreEl.innerText = personalScore;
   }
 
-  // Handle Clicking
-  function handleClick(e) {
+  // Handle Press (Open Mouth)
+  function handlePress(e) {
+    if(e.type === 'touchstart' && e.cancelable) e.preventDefault(); // prevent double firing
+    
     // 1. Play sound & animate
     playPopSound();
     avatarEl.src = 'open.png';
     avatarEl.classList.add('clicked');
     
-    setTimeout(() => {
-      avatarEl.src = 'normal.png';
-      avatarEl.classList.remove('clicked');
-    }, 100);
-
     // 2. Update scores
     personalScore++;
     pendingClicks++;
@@ -209,6 +206,12 @@
     
     // 3. Floating particle
     createFloatingParticle(e);
+  }
+
+  // Handle Release (Close Mouth)
+  function handleRelease(e) {
+    avatarEl.src = 'normal.png';
+    avatarEl.classList.remove('clicked');
   }
 
   function createFloatingParticle(e) {
@@ -243,11 +246,11 @@
   }
 
   // Events
-  avatarEl.addEventListener('mousedown', handleClick);
-  avatarEl.addEventListener('touchstart', (e) => {
-    e.preventDefault(); // prevent mouse emulation and double clicks
-    handleClick(e);
-  });
+  avatarEl.addEventListener('mousedown', handlePress);
+  window.addEventListener('mouseup', handleRelease);
+  avatarEl.addEventListener('touchstart', handlePress, {passive: false});
+  window.addEventListener('touchend', handleRelease);
+  window.addEventListener('touchcancel', handleRelease);
 
   // Socket communication
   
