@@ -223,6 +223,12 @@
 
 <body>
 
+
+  <header style="position: relative;">
+    <div class="global-counter">전체 팝 수 <span id="global-clicks">0</span></div>
+    <button id="reset-nickname-btn" style="position: absolute; right: 20px; top: 10px; padding: 8px 15px; border-radius: 20px; border: none; background: #EE8F7B; color: white; cursor: pointer; font-family: inherit;">닉네임 변경</button>
+  </header>
+
   <div class="overlay" id="loading-overlay">
     <div class="nickname-box">
       <div style="margin-bottom: 20px; font-size: 2rem;">나만의 팝캣 닉네임 🎉</div>
@@ -231,10 +237,6 @@
       <button id="nickname-btn" class="nickname-btn">시작하기</button>
     </div>
   </div>
-
-  <header>
-    <div class="global-counter">전 세계 누적: <span id="global-clicks">0</span></div>
-  </header>
 
   <div class="game-container">
     <div class="my-score-display" id="my-score">0</div>
@@ -253,7 +255,7 @@
     const socket = io();
 
     // Game state
-    let myId = localStorage.getItem('my_game_id');
+    let myId = localStorage.getItem('popcat_nickname_v2');
     let personalScore = 0;
     let pendingClicks = 0;
 
@@ -265,25 +267,33 @@
     const rankListEl = document.getElementById('rank-list');
 
     // Web Audio Context for sound effect
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let audioCtx;
+
+    function getAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      return audioCtx;
+    }
 
     function playPopSound() {
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      const osc = audioCtx.createOscillator();
-      const gainNode = audioCtx.createGain();
+      const ctx = getAudioContext();
+      if (ctx.state === 'suspended') ctx.resume();
+      const osc = ctx.createOscillator();
+      const gainNode = ctx.createGain();
       osc.connect(gainNode);
-      gainNode.connect(audioCtx.destination);
+      gainNode.connect(ctx.destination);
 
       osc.type = 'sine';
       // Pop snap sound
-      osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.05);
+      osc.frequency.setValueAtTime(800, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.05);
 
-      gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+      gainNode.gain.setValueAtTime(0.5, ctx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.05);
 
       osc.start();
-      osc.stop(audioCtx.currentTime + 0.05);
+      osc.stop(ctx.currentTime + 0.05);
     }
 
     // Init App & ID
@@ -299,7 +309,7 @@
           let val = input.value.trim();
           if (val) {
             myId = val.substring(0, 8);
-            localStorage.setItem('my_game_id', myId);
+            localStorage.setItem('popcat_nickname_v2', myId);
             loadingOverlay.style.display = 'none';
             loadScore();
           }
@@ -430,6 +440,13 @@
         rankListEl.appendChild(li);
       });
     });
+
+    // Reset nickname logic
+    document.getElementById('reset-nickname-btn').onclick = () => {
+      localStorage.removeItem('popcat_nickname_v2');
+      myId = null;
+      loadingOverlay.style.display = 'flex';
+    };
 
     // Init
     initApp();
