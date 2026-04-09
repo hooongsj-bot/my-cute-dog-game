@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="ko">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,447 +9,102 @@
   <script src="/socket.io/socket.io.js"></script>
   <style>
     :root {
-      --bg-color: #EFE4D3;
-      --card-bg: #FCFAF5;
-      --text-color: #61564C;
-      --highlight-color: #EFB344;
-      --secondary-highlight: #EE8F7B;
+      --bg-color: #EFE4D3; --card-bg: #FCFAF5; --text-color: #61564C;
+      --highlight-color: #EFB344; --secondary-highlight: #EE8F7B;
     }
-
-    body,
-    html {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      /* 최우선으로 유저 PC의 OK 말랑 B를 시도하고, 없으면 Jua 적용 */
-      font-family: 'OK Mallang B', 'OkMallangB', '산돌 옥말랑 B', 'Jua', sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      overflow-x: hidden;
+    body, html {
+      margin: 0; padding: 0; height: 100%; background-color: var(--bg-color);
+      color: var(--text-color); font-family: 'OK Mallang B', 'OkMallangB', 'Jua', sans-serif;
+      display: flex; flex-direction: column; align-items: center; overflow-x: hidden;
     }
-
-    header {
-      text-align: center;
-      margin-top: 40px;
-    }
-
-    .global-counter {
-      font-size: 1.5rem;
-      color: var(--text-color);
-      background-color: var(--card-bg);
-      padding: 10px 24px;
-      border-radius: 30px;
-      box-shadow: 0 6px 15px rgba(100, 80, 60, 0.06);
-      display: inline-block;
-    }
-
-    .global-counter span {
-      color: var(--highlight-color);
-    }
-
-    .game-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin-top: 30px;
-      flex: 1;
-    }
-
-    .my-score-display {
-      font-size: 4rem;
-      color: var(--secondary-highlight);
-      margin-bottom: 25px;
-      text-shadow: 2px 2px 0px #fff;
-      line-height: 1;
-    }
-
-    /* Image Avatar */
-    .avatar {
-      width: 100%;
-      max-width: 320px;
-      height: auto;
-      object-fit: contain;
-      user-select: none;
-      cursor: pointer;
-      margin-bottom: 40px;
-      filter: drop-shadow(0 15px 25px rgba(100, 80, 60, 0.15));
-      -webkit-tap-highlight-color: transparent;
-      transition: transform 0.08s ease-out;
-    }
-
-    .avatar.clicked {
-      transform: scale(1.05) translateY(-5px);
-    }
-
-    /* Leaderboard */
-    .leaderboard-box {
-      width: 90%;
-      max-width: 450px;
-      background: var(--card-bg);
-      border-radius: 28px;
-      box-shadow: 0 8px 25px rgba(100, 80, 60, 0.06);
-      padding: 24px;
-      margin-bottom: 40px;
-    }
-
-    .leaderboard-title {
-      text-align: center;
-      font-size: 1.6rem;
-      color: var(--text-color);
-      margin-bottom: 16px;
-    }
-
-    .rank-list {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      max-height: 260px;
-      overflow-y: auto;
-    }
-
-    .rank-list::-webkit-scrollbar {
-      width: 8px;
-    }
-
-    .rank-list::-webkit-scrollbar-thumb {
-      background-color: #DCCCBA;
-      border-radius: 10px;
-    }
-
-    .rank-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 16px;
-      margin-bottom: 10px;
-      background-color: #F8EFE4;
-      /* subtle base for non-top 3 */
-      border-radius: 18px;
-      font-size: 1.3rem;
-    }
-
-    .rank-item:nth-child(1) {
-      background: #FFF4D9;
-      color: #D59419;
-      font-size: 1.5rem;
-      font-weight: normal;
-    }
-
-    .rank-item:nth-child(2) {
-      background: #EDF3FE;
-      color: #5A83D2;
-      font-size: 1.4rem;
-    }
-
-    .rank-item:nth-child(3) {
-      background: #FCEDED;
-      color: #DD6E6E;
-      font-size: 1.3rem;
-    }
-
-    .rank-country {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .rank-score {
-      font-weight: normal;
-    }
-
-    /* Nickname Detection overlay */
-    .overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(250, 248, 245, 0.95);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      font-size: 1.8rem;
-      z-index: 1000;
-    }
-
-    .nickname-box {
-      background: var(--card-bg);
-      padding: 40px;
-      border-radius: 28px;
-      box-shadow: 0 10px 30px rgba(100, 80, 60, 0.1);
-      text-align: center;
-    }
-
-    .nickname-input {
-      font-family: inherit;
-      font-size: 1.5rem;
-      padding: 12px 20px;
-      border: 3px solid #EFE4D3;
-      border-radius: 16px;
-      margin-bottom: 20px;
-      outline: none;
-      text-align: center;
-      color: var(--text-color);
-      width: 200px;
-    }
-
-    .nickname-input:focus {
-      border-color: #EFB344;
-    }
-
-    .nickname-btn {
-      font-family: inherit;
-      font-size: 1.5rem;
-      padding: 12px 40px;
-      background: var(--highlight-color);
-      color: #fff;
-      border: none;
-      border-radius: 16px;
-      cursor: pointer;
-      box-shadow: 0 4px 10px rgba(239, 179, 68, 0.3);
-      transition: transform 0.1s;
-    }
-
-    .nickname-btn:active {
-      transform: scale(0.95);
-    }
+    header { text-align: center; margin-top: 40px; position: relative; width: 100%; max-width: 450px; }
+    .global-counter { font-size: 1.5rem; background-color: var(--card-bg); padding: 10px 24px; border-radius: 30px; box-shadow: 0 6px 15px rgba(0,0,0,0.05); }
+    #reset-nickname-btn { position: absolute; right: 10px; top: 10px; padding: 8px 15px; border-radius: 20px; border: none; background: #EE8F7B; color: white; cursor: pointer; font-family: inherit; }
+    .game-container { display: flex; flex-direction: column; align-items: center; margin-top: 30px; flex: 1; }
+    .my-score-display { font-size: 4rem; color: var(--secondary-highlight); text-shadow: 2px 2px 0px #fff; }
+    .avatar { width: 100%; max-width: 320px; cursor: pointer; filter: drop-shadow(0 15px 25px rgba(0,0,0,0.1)); transition: transform 0.08s; }
+    .avatar.clicked { transform: scale(1.05) translateY(-5px); }
+    .leaderboard-box { width: 90%; max-width: 450px; background: var(--card-bg); border-radius: 28px; padding: 24px; margin-bottom: 40px; box-shadow: 0 8px 25px rgba(0,0,0,0.05); }
+    .rank-list { list-style: none; padding: 0; max-height: 260px; overflow-y: auto; }
+    .rank-item { display: flex; justify-content: space-between; padding: 12px 16px; margin-bottom: 10px; background: #F8EFE4; border-radius: 18px; font-size: 1.2rem; }
+    .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(250,248,245,0.95); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+    .nickname-box { background: var(--card-bg); padding: 40px; border-radius: 28px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+    .nickname-input { font-size: 1.5rem; padding: 10px; border: 3px solid #EFE4D3; border-radius: 15px; margin-bottom: 20px; text-align: center; width: 200px; }
+    .nickname-btn { font-size: 1.5rem; padding: 10px 30px; background: var(--highlight-color); color: white; border: none; border-radius: 15px; cursor: pointer; }
   </style>
 </head>
-
 <body>
-
-
-  <header style="position: relative;">
+  <header>
     <div class="global-counter">전체 팝 수 <span id="global-clicks">0</span></div>
-    <button id="reset-nickname-btn" style="position: absolute; right: 20px; top: 10px; padding: 8px 15px; border-radius: 20px; border: none; background: #EE8F7B; color: white; cursor: pointer; font-family: inherit;">닉네임 변경</button>
+    <button id="reset-nickname-btn">닉네임 변경</button>
   </header>
-
   <div class="overlay" id="loading-overlay">
     <div class="nickname-box">
-      <div style="margin-bottom: 20px; font-size: 2rem;">나만의 팝캣 닉네임 🎉</div>
-      <input type="text" id="nickname-input" class="nickname-input" maxlength="8" placeholder="최대 8글자"
-        autocomplete="off"><br>
+      <div style="margin-bottom:20px;">나만의 팝캣 닉네임 🎉</div>
+      <input type="text" id="nickname-input" class="nickname-input" maxlength="8" placeholder="최대 8글자"><br>
       <button id="nickname-btn" class="nickname-btn">시작하기</button>
     </div>
   </div>
-
   <div class="game-container">
     <div class="my-score-display" id="my-score">0</div>
-    <!-- Dog image logic: Normal = normal.png, Clicked = open.png -->
-    <img class="avatar" id="avatar" src="normal.png" alt="Dog Avatar" draggable="false">
+    <img class="avatar" id="avatar" src="normal.png" draggable="false">
   </div>
-
   <div class="leaderboard-box">
-    <div class="leaderboard-title">🏆 명예의 전당 (실시간 랭킹)</div>
-    <ul class="rank-list" id="rank-list">
-      <!-- List items injected by JS -->
-    </ul>
+    <div class="leaderboard-title">🏆 명예의 전당</div>
+    <ul class="rank-list" id="rank-list"></ul>
   </div>
-
   <script>
     const socket = io();
-
-    // Game state
-    let myId = localStorage.getItem('popcat_nickname_v2');
-    let personalScore = 0;
-    let pendingClicks = 0;
-
-    // DOM Elements
+    let myId = localStorage.getItem('popcat_v3');
+    let personalScore = 0, pendingClicks = 0, audioCtx;
     const loadingOverlay = document.getElementById('loading-overlay');
-    const globalClicksEl = document.getElementById('global-clicks');
     const myScoreEl = document.getElementById('my-score');
     const avatarEl = document.getElementById('avatar');
-    const rankListEl = document.getElementById('rank-list');
-
-    // Web Audio Context for sound effect
-    let audioCtx;
-
-    function getAudioContext() {
-      if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      }
-      return audioCtx;
-    }
 
     function playPopSound() {
-      const ctx = getAudioContext();
-      if (ctx.state === 'suspended') ctx.resume();
-      const osc = ctx.createOscillator();
-      const gainNode = ctx.createGain();
-      osc.connect(gainNode);
-      gainNode.connect(ctx.destination);
-
-      osc.type = 'sine';
-      // Pop snap sound
-      osc.frequency.setValueAtTime(800, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.05);
-
-      gainNode.gain.setValueAtTime(0.5, ctx.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.05);
-
-      osc.start();
-      osc.stop(ctx.currentTime + 0.05);
+      if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if(audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.05);
+      gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+      osc.start(); osc.stop(audioCtx.currentTime + 0.05);
     }
 
-    // Init App & ID
     function initApp() {
-      if (myId) {
-        loadingOverlay.style.display = 'none';
-        loadScore();
-      } else {
-        // Show nickname modal
-        const btn = document.getElementById('nickname-btn');
-        const input = document.getElementById('nickname-input');
-        btn.onclick = () => {
-          let val = input.value.trim();
-          if (val) {
-            myId = val.substring(0, 8);
-            localStorage.setItem('popcat_nickname_v2', myId);
-            loadingOverlay.style.display = 'none';
-            loadScore();
-          }
-        };
-      }
-    }
-
-    function loadScore() {
-      const saved = localStorage.getItem('personal_score');
-      if (saved) { personalScore = parseInt(saved, 10); }
-      myScoreEl.innerText = personalScore;
-    }
-
-    // 이미지 절대경로로 미리 저장
-    const BASE = location.href.replace(/\/[^/]*$/, '/');
-    const IMG_NORMAL = BASE + 'normal.png';
-    const IMG_OPEN = BASE + 'open.png';
-
-    // 이미지 미리 로드
-    const preloadOpen = new Image(); preloadOpen.src = IMG_OPEN;
-
-    // Handle Press (Open Mouth)
-    function handlePress(e) {
-      if (e.type === 'touchstart' && e.cancelable) e.preventDefault();
-
-      // 1. 이미지 교체 (가장 먼저!)
-      avatarEl.src = IMG_OPEN;
-      avatarEl.classList.add('clicked');
-
-      // 2. 사운드
-      playPopSound();
-
-      // 3. 점수
-      personalScore++;
-      pendingClicks++;
-      myScoreEl.innerText = personalScore;
-      localStorage.setItem('personal_score', personalScore);
-
-      // 4. 파티클 (에러나도 이미지 교체에 영향 없게 try-catch)
-      try { createFloatingParticle(e); } catch (_) { }
-    }
-
-    // Handle Release (Close Mouth)
-    function handleRelease(e) {
-      avatarEl.src = IMG_NORMAL;
-      avatarEl.classList.remove('clicked');
-    }
-
-    function createFloatingParticle(e) {
-      let x, y;
-      if (e.type === 'touchstart') {
-        x = e.touches[0].clientX;
-        y = e.touches[0].clientY;
-      } else {
-        x = e.clientX;
-        y = e.clientY;
-      }
-
-      const el = document.createElement('div');
-      el.innerText = '+1';
-      el.style.position = 'absolute';
-      el.style.left = (x - 20) + 'px';
-      el.style.top = (y - 20) + 'px';
-      el.style.fontSize = '2rem';
-      el.style.fontWeight = 'bold';
-      el.style.color = '#ff4757';
-      el.style.pointerEvents = 'none';
-      el.style.transition = 'all 0.5s ease-out';
-      document.body.appendChild(el);
-
-      // Trigger tick
-      setTimeout(() => {
-        el.style.transform = 'translateY(-100px) scale(1.5)';
-        el.style.opacity = '0';
-      }, 10);
-
-      setTimeout(() => { document.body.removeChild(el); }, 500);
-    }
-
-    // Events
-    avatarEl.addEventListener('mousedown', handlePress);
-    window.addEventListener('mouseup', handleRelease);
-    avatarEl.addEventListener('touchstart', handlePress, { passive: false });
-    window.addEventListener('touchend', handleRelease);
-    window.addEventListener('touchcancel', handleRelease);
-
-    // Socket communication
-
-    // Every 300ms, if there are pending clicks, batch send them to the server
-    setInterval(() => {
-      if (pendingClicks > 0 && myId) {
-        socket.emit('add_clicks', {
-          id: myId,  // Changed from country
-          count: pendingClicks
-        });
-        pendingClicks = 0;
-      }
-    }, 300);
-
-    // Receive leaderboard updates
-    socket.on('leaderboard_update', (data) => {
-      globalClicksEl.innerText = data.totalClicks.toLocaleString();
-
-      // Render ranking
-      rankListEl.innerHTML = '';
-      data.ranking.forEach((entry, index) => {
-        const li = document.createElement('li');
-        li.className = 'rank-item';
-
-        let rankSticker = (index + 1) + '위';
-        if (index === 0) rankSticker = '🥇';
-        if (index === 1) rankSticker = '🥈';
-        if (index === 2) rankSticker = '🥉';
-
-        li.innerHTML = `
-          <div class="rank-country">
-            <span style="width: 40px; text-align: center;">${rankSticker}</span>
-            <span style="font-weight: bold;">${entry.id}</span>
-          </div>
-          <div class="rank-score">${entry.score.toLocaleString()} 팝</div>
-       `;
-
-        // highlight my ID if it matches
-        if (entry.id === myId) {
-          li.style.borderLeft = '5px solid #EFB344';
+      if(myId) { loadingOverlay.style.display='none'; personalScore = parseInt(localStorage.getItem('score')||0); myScoreEl.innerText=personalScore; }
+      else {
+        document.getElementById('nickname-btn').onclick = () => {
+          const v = document.getElementById('nickname-input').value.trim();
+          if(v) { myId = v.substring(0,8); localStorage.setItem('popcat_v3', myId); loadingOverlay.style.display='none'; }
         }
+      }
+    }
 
-        rankListEl.appendChild(li);
+    avatarEl.onmousedown = avatarEl.ontouchstart = (e) => {
+      if(e.type==='touchstart') e.preventDefault();
+      avatarEl.src = 'open.png'; avatarEl.classList.add('clicked');
+      playPopSound(); personalScore++; pendingClicks++;
+      myScoreEl.innerText = personalScore; localStorage.setItem('score', personalScore);
+    };
+    window.onmouseup = window.ontouchend = () => { avatarEl.src = 'normal.png'; avatarEl.classList.remove('clicked'); };
+
+    document.getElementById('reset-nickname-btn').onclick = () => { localStorage.removeItem('popcat_v3'); location.reload(); };
+
+    setInterval(() => { if(pendingClicks > 0 && myId) { socket.emit('add_clicks', {id:myId, count:pendingClicks}); pendingClicks=0; } }, 300);
+    socket.on('leaderboard_update', d => {
+      document.getElementById('global-clicks').innerText = d.totalClicks.toLocaleString();
+      const list = document.getElementById('rank-list'); list.innerHTML = '';
+      d.ranking.forEach((en, i) => {
+        const li = document.createElement('li'); li.className = 'rank-item';
+        li.innerHTML = `<span>${i+1}위 <b>${en.id}</b></span><span>${en.score.toLocaleString()} 팝</span>`;
+        if(en.id === myId) li.style.borderLeft = '5px solid #EFB344';
+        list.appendChild(li);
       });
     });
-
-    // Reset nickname logic
-    document.getElementById('reset-nickname-btn').onclick = () => {
-      localStorage.removeItem('popcat_nickname_v2');
-      myId = null;
-      loadingOverlay.style.display = 'flex';
-    };
-
-    // Init
     initApp();
   </script>
 </body>
-
 </html>
