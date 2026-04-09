@@ -5,19 +5,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>글로벌 팝캣 배틀!</title>
 <link rel="preload" as="image" href="open.png">
-<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
 <script src="/socket.io/socket.io.js"></script>
 <style>
   :root {
-     --bg-color: #EFEFEF;
-     --text-color: #333;
-     --highlight-color: #4CAF50;
+     --bg-color: #EFE4D3;
+     --card-bg: #FCFAF5;
+     --text-color: #61564C;
+     --highlight-color: #EFB344;
+     --secondary-highlight: #EE8F7B;
   }
   body, html {
     margin: 0; padding: 0; height: 100%;
     background-color: var(--bg-color);
     color: var(--text-color);
-    font-family: 'Gaegu', cursive;
+    font-family: 'Jua', sans-serif;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -26,76 +28,97 @@
   
   header {
     text-align: center;
-    margin-top: 20px;
+    margin-top: 40px;
   }
-  header h1 { margin: 0; font-size: 3rem; }
-  .global-counter { font-size: 2rem; color: #555; }
+  .global-counter { 
+    font-size: 1.5rem; 
+    color: var(--text-color);
+    background-color: var(--card-bg);
+    padding: 10px 24px;
+    border-radius: 30px;
+    box-shadow: 0 6px 15px rgba(100, 80, 60, 0.06);
+    display: inline-block;
+  }
+  .global-counter span {
+    color: var(--highlight-color);
+  }
   
   .game-container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-top: 20px;
+    margin-top: 30px;
     flex: 1;
   }
   
   .my-score-display {
-    font-size: 3.5rem;
-    font-weight: bold;
-    color: var(--highlight-color);
-    margin-bottom: 20px;
+    font-size: 4rem;
+    color: var(--secondary-highlight);
+    margin-bottom: 25px;
+    text-shadow: 2px 2px 0px #fff;
+    line-height: 1;
   }
 
-  /* Cat / Image Avatar */
+  /* Image Avatar */
   .avatar {
     width: 100%;
-    max-width: 350px;
+    max-width: 320px;
     height: auto;
     object-fit: contain;
     user-select: none;
     cursor: pointer;
     margin-bottom: 40px;
-    filter: drop-shadow(0 10px 15px rgba(0,0,0,0.15));
+    filter: drop-shadow(0 15px 25px rgba(100, 80, 60, 0.15));
     -webkit-tap-highlight-color: transparent;
+    transition: transform 0.08s ease-out;
   }
   .avatar.clicked {
-    transform: scale(1.05) translateY(-10px);
+    transform: scale(1.05) translateY(-5px);
   }
 
   /* Leaderboard */
   .leaderboard-box {
-    width: 90%; max-width: 500px;
-    background: #fff;
-    border-radius: 20px;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
-    padding: 20px;
+    width: 90%; max-width: 450px;
+    background: var(--card-bg);
+    border-radius: 28px;
+    box-shadow: 0 8px 25px rgba(100, 80, 60, 0.06);
+    padding: 24px;
     margin-bottom: 40px;
   }
   .leaderboard-title {
-    text-align: center; font-size: 2rem; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 10px;
+    text-align: center; 
+    font-size: 1.6rem; 
+    color: var(--text-color);
+    margin-bottom: 16px;
   }
   .rank-list {
     list-style: none; padding: 0; margin: 0;
-    max-height: 300px; overflow-y: auto;
+    max-height: 260px; overflow-y: auto;
   }
+  .rank-list::-webkit-scrollbar { width: 8px; }
+  .rank-list::-webkit-scrollbar-thumb { background-color: #DCCCBA; border-radius: 10px; }
+  
   .rank-item {
     display: flex; justify-content: space-between; align-items: center;
-    padding: 10px; border-bottom: 1px solid #f0f0f0;
-    font-size: 1.5rem;
+    padding: 12px 16px; 
+    margin-bottom: 10px;
+    background-color: #F8EFE4; /* subtle base for non-top 3 */
+    border-radius: 18px;
+    font-size: 1.3rem;
   }
-  .rank-item:nth-child(1) { font-size: 2.2rem; font-weight: bold; background: #fffbe6; border-radius: 10px;}
-  .rank-item:nth-child(2) { font-size: 1.8rem; background: #f4f6ff; border-radius: 10px;}
-  .rank-item:nth-child(3) { font-size: 1.6rem; background: #fff0f0; border-radius: 10px;}
+  .rank-item:nth-child(1) { background: #FFF4D9; color: #D59419; font-size: 1.5rem; font-weight: normal; }
+  .rank-item:nth-child(2) { background: #EDF3FE; color: #5A83D2; font-size: 1.4rem; }
+  .rank-item:nth-child(3) { background: #FCEDED; color: #DD6E6E; font-size: 1.3rem; }
   
   .rank-country { display: flex; align-items: center; gap: 10px;}
-  .rank-score { font-weight: bold; color: #666; }
+  .rank-score { font-weight: normal; }
 
   /* Country Detection overlay */
   .overlay {
     position: fixed; top:0; left:0; width:100%; height:100%;
-    background: rgba(255,255,255,0.8);
+    background: rgba(250, 248, 245, 0.9);
     display: flex; justify-content: center; align-items: center;
-    font-size: 2rem; z-index: 1000;
+    font-size: 1.8rem; z-index: 1000;
   }
 </style>
 </head>
@@ -300,7 +323,7 @@
        
        // highlight my country if it matches
        if(entry.code === myCountryCode) {
-         li.style.borderLeft = '5px solid #4CAF50';
+         li.style.borderLeft = '5px solid #EFB344';
        }
        
        rankListEl.appendChild(li);
