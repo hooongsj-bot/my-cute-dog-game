@@ -1,337 +1,439 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>글로벌 팝캣 배틀!</title>
-<link rel="preload" as="image" href="open.png">
-<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
-<script src="/socket.io/socket.io.js"></script>
-<style>
-  :root {
-     --bg-color: #EFE4D3;
-     --card-bg: #FCFAF5;
-     --text-color: #61564C;
-     --highlight-color: #EFB344;
-     --secondary-highlight: #EE8F7B;
-  }
-  body, html {
-    margin: 0; padding: 0; height: 100%;
-    background-color: var(--bg-color);
-    color: var(--text-color);
-    font-family: 'Jua', sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    overflow-x: hidden;
-  }
-  
-  header {
-    text-align: center;
-    margin-top: 40px;
-  }
-  .global-counter { 
-    font-size: 1.5rem; 
-    color: var(--text-color);
-    background-color: var(--card-bg);
-    padding: 10px 24px;
-    border-radius: 30px;
-    box-shadow: 0 6px 15px rgba(100, 80, 60, 0.06);
-    display: inline-block;
-  }
-  .global-counter span {
-    color: var(--highlight-color);
-  }
-  
-  .game-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-top: 30px;
-    flex: 1;
-  }
-  
-  .my-score-display {
-    font-size: 4rem;
-    color: var(--secondary-highlight);
-    margin-bottom: 25px;
-    text-shadow: 2px 2px 0px #fff;
-    line-height: 1;
-  }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Click Battle</title>
+  <link rel="preload" as="image" href="open.png">
+  <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    :root {
+      --bg-color: #EFE4D3;
+      --card-bg: #FCFAF5;
+      --text-color: #61564C;
+      --highlight-color: #EFB344;
+      --secondary-highlight: #EE8F7B;
+    }
 
-  /* Image Avatar */
-  .avatar {
-    width: 100%;
-    max-width: 320px;
-    height: auto;
-    object-fit: contain;
-    user-select: none;
-    cursor: pointer;
-    margin-bottom: 40px;
-    filter: drop-shadow(0 15px 25px rgba(100, 80, 60, 0.15));
-    -webkit-tap-highlight-color: transparent;
-    transition: transform 0.08s ease-out;
-  }
-  .avatar.clicked {
-    transform: scale(1.05) translateY(-5px);
-  }
+    body,
+    html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      /* 최우선으로 유저 PC의 OK 말랑 B를 시도하고, 없으면 Jua 적용 */
+      font-family: 'OK Mallang B', 'OkMallangB', '산돌 옥말랑 B', 'Jua', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-x: hidden;
+    }
 
-  /* Leaderboard */
-  .leaderboard-box {
-    width: 90%; max-width: 450px;
-    background: var(--card-bg);
-    border-radius: 28px;
-    box-shadow: 0 8px 25px rgba(100, 80, 60, 0.06);
-    padding: 24px;
-    margin-bottom: 40px;
-  }
-  .leaderboard-title {
-    text-align: center; 
-    font-size: 1.6rem; 
-    color: var(--text-color);
-    margin-bottom: 16px;
-  }
-  .rank-list {
-    list-style: none; padding: 0; margin: 0;
-    max-height: 260px; overflow-y: auto;
-  }
-  .rank-list::-webkit-scrollbar { width: 8px; }
-  .rank-list::-webkit-scrollbar-thumb { background-color: #DCCCBA; border-radius: 10px; }
-  
-  .rank-item {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 12px 16px; 
-    margin-bottom: 10px;
-    background-color: #F8EFE4; /* subtle base for non-top 3 */
-    border-radius: 18px;
-    font-size: 1.3rem;
-  }
-  .rank-item:nth-child(1) { background: #FFF4D9; color: #D59419; font-size: 1.5rem; font-weight: normal; }
-  .rank-item:nth-child(2) { background: #EDF3FE; color: #5A83D2; font-size: 1.4rem; }
-  .rank-item:nth-child(3) { background: #FCEDED; color: #DD6E6E; font-size: 1.3rem; }
-  
-  .rank-country { display: flex; align-items: center; gap: 10px;}
-  .rank-score { font-weight: normal; }
+    header {
+      text-align: center;
+      margin-top: 40px;
+    }
 
-  /* Country Detection overlay */
-  .overlay {
-    position: fixed; top:0; left:0; width:100%; height:100%;
-    background: rgba(250, 248, 245, 0.9);
-    display: flex; justify-content: center; align-items: center;
-    font-size: 1.8rem; z-index: 1000;
-  }
-</style>
+    .global-counter {
+      font-size: 1.5rem;
+      color: var(--text-color);
+      background-color: var(--card-bg);
+      padding: 10px 24px;
+      border-radius: 30px;
+      box-shadow: 0 6px 15px rgba(100, 80, 60, 0.06);
+      display: inline-block;
+    }
+
+    .global-counter span {
+      color: var(--highlight-color);
+    }
+
+    .game-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 30px;
+      flex: 1;
+    }
+
+    .my-score-display {
+      font-size: 4rem;
+      color: var(--secondary-highlight);
+      margin-bottom: 25px;
+      text-shadow: 2px 2px 0px #fff;
+      line-height: 1;
+    }
+
+    /* Image Avatar */
+    .avatar {
+      width: 100%;
+      max-width: 320px;
+      height: auto;
+      object-fit: contain;
+      user-select: none;
+      cursor: pointer;
+      margin-bottom: 40px;
+      filter: drop-shadow(0 15px 25px rgba(100, 80, 60, 0.15));
+      -webkit-tap-highlight-color: transparent;
+      transition: transform 0.08s ease-out;
+    }
+
+    .avatar.clicked {
+      transform: scale(1.05) translateY(-5px);
+    }
+
+    /* Leaderboard */
+    .leaderboard-box {
+      width: 90%;
+      max-width: 450px;
+      background: var(--card-bg);
+      border-radius: 28px;
+      box-shadow: 0 8px 25px rgba(100, 80, 60, 0.06);
+      padding: 24px;
+      margin-bottom: 40px;
+    }
+
+    .leaderboard-title {
+      text-align: center;
+      font-size: 1.6rem;
+      color: var(--text-color);
+      margin-bottom: 16px;
+    }
+
+    .rank-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      max-height: 260px;
+      overflow-y: auto;
+    }
+
+    .rank-list::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .rank-list::-webkit-scrollbar-thumb {
+      background-color: #DCCCBA;
+      border-radius: 10px;
+    }
+
+    .rank-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      margin-bottom: 10px;
+      background-color: #F8EFE4;
+      /* subtle base for non-top 3 */
+      border-radius: 18px;
+      font-size: 1.3rem;
+    }
+
+    .rank-item:nth-child(1) {
+      background: #FFF4D9;
+      color: #D59419;
+      font-size: 1.5rem;
+      font-weight: normal;
+    }
+
+    .rank-item:nth-child(2) {
+      background: #EDF3FE;
+      color: #5A83D2;
+      font-size: 1.4rem;
+    }
+
+    .rank-item:nth-child(3) {
+      background: #FCEDED;
+      color: #DD6E6E;
+      font-size: 1.3rem;
+    }
+
+    .rank-country {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .rank-score {
+      font-weight: normal;
+    }
+
+    /* Nickname Detection overlay */
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(250, 248, 245, 0.95);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.8rem;
+      z-index: 1000;
+    }
+
+    .nickname-box {
+      background: var(--card-bg);
+      padding: 40px;
+      border-radius: 28px;
+      box-shadow: 0 10px 30px rgba(100, 80, 60, 0.1);
+      text-align: center;
+    }
+
+    .nickname-input {
+      font-family: inherit;
+      font-size: 1.5rem;
+      padding: 12px 20px;
+      border: 3px solid #EFE4D3;
+      border-radius: 16px;
+      margin-bottom: 20px;
+      outline: none;
+      text-align: center;
+      color: var(--text-color);
+      width: 200px;
+    }
+
+    .nickname-input:focus {
+      border-color: #EFB344;
+    }
+
+    .nickname-btn {
+      font-family: inherit;
+      font-size: 1.5rem;
+      padding: 12px 40px;
+      background: var(--highlight-color);
+      color: #fff;
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(239, 179, 68, 0.3);
+      transition: transform 0.1s;
+    }
+
+    .nickname-btn:active {
+      transform: scale(0.95);
+    }
+  </style>
 </head>
+
 <body>
 
-<div class="overlay" id="loading-overlay">국가 인식 중... 🌍</div>
+  <div class="overlay" id="loading-overlay">
+    <div class="nickname-box">
+      <div style="margin-bottom: 20px; font-size: 2rem;">나만의 팝캣 닉네임 🎉</div>
+      <input type="text" id="nickname-input" class="nickname-input" maxlength="8" placeholder="최대 8글자"
+        autocomplete="off"><br>
+      <button id="nickname-btn" class="nickname-btn">시작하기</button>
+    </div>
+  </div>
 
-<header>
-  <div class="global-counter">전 세계 누적: <span id="global-clicks">0</span></div>
-</header>
+  <header>
+    <div class="global-counter">전 세계 누적: <span id="global-clicks">0</span></div>
+  </header>
 
-<div class="game-container">
-  <div class="my-score-display" id="my-score">0</div>
-  <!-- Dog image logic: Normal = normal.png, Clicked = open.png -->
-  <img class="avatar" id="avatar" src="normal.png" alt="Dog Avatar" draggable="false">
-</div>
+  <div class="game-container">
+    <div class="my-score-display" id="my-score">0</div>
+    <!-- Dog image logic: Normal = normal.png, Clicked = open.png -->
+    <img class="avatar" id="avatar" src="normal.png" alt="Dog Avatar" draggable="false">
+  </div>
 
-<div class="leaderboard-box">
-  <div class="leaderboard-title">🏆 국가별 실시간 랭킹 추이</div>
-  <ul class="rank-list" id="rank-list">
-    <!-- List items injected by JS -->
-  </ul>
-</div>
+  <div class="leaderboard-box">
+    <div class="leaderboard-title">🏆 명예의 전당 (실시간 랭킹)</div>
+    <ul class="rank-list" id="rank-list">
+      <!-- List items injected by JS -->
+    </ul>
+  </div>
 
-<script>
-  const socket = io();
-  
-  // Game state
-  let myCountryCode = 'US'; // default fallback
-  let personalScore = 0;
-  let pendingClicks = 0;
+  <script>
+    const socket = io();
 
-  // DOM Elements
-  const loadingOverlay = document.getElementById('loading-overlay');
-  const globalClicksEl = document.getElementById('global-clicks');
-  const myScoreEl = document.getElementById('my-score');
-  const avatarEl = document.getElementById('avatar');
-  const rankListEl = document.getElementById('rank-list');
+    // Game state
+    let myId = localStorage.getItem('my_game_id');
+    let personalScore = 0;
+    let pendingClicks = 0;
 
-  // Web Audio Context for sound effect
-  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  
-  function playPopSound() {
-    if(audioCtx.state === 'suspended') audioCtx.resume();
-    const osc = audioCtx.createOscillator();
-    const gainNode = audioCtx.createGain();
-    osc.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-    
-    osc.type = 'sine';
-    // Pop snap sound
-    osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.05);
-    
-    gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
-    
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.05);
-  }
+    // DOM Elements
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const globalClicksEl = document.getElementById('global-clicks');
+    const myScoreEl = document.getElementById('my-score');
+    const avatarEl = document.getElementById('avatar');
+    const rankListEl = document.getElementById('rank-list');
 
-  // Utilities
-  // Converts standard ISO 2-letter Code (e.g. KR) to Flag Emoji (🇰🇷)
-  function getFlagEmoji(countryCode) {
-    if(!countryCode || countryCode.length !== 2) return '🏁';
-    const codePoints = countryCode
-      .toUpperCase()
-      .split('')
-      .map(char =>  127397 + char.charCodeAt());
-    return String.fromCodePoint(...codePoints);
-  }
+    // Web Audio Context for sound effect
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-  // Detect Country
-  async function detectCountry() {
-    try {
-      const response = await fetch('https://ipapi.co/json/');
-      const data = await response.json();
-      if(data && data.country_code) {
-        myCountryCode = data.country_code;
-      }
-    } catch (e) {
-      console.warn("IP detection failed, using default (US)");
+    function playPopSound() {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      osc.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      osc.type = 'sine';
+      // Pop snap sound
+      osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.05);
+
+      gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.05);
     }
-    
-    loadingOverlay.style.display = 'none';
-    
-    // Load local personal score
-    const saved = localStorage.getItem('personal_score');
-    if (saved) { personalScore = parseInt(saved, 10); }
-    myScoreEl.innerText = personalScore;
-  }
 
-  // 이미지 절대경로로 미리 저장
-  const BASE = location.href.replace(/\/[^/]*$/, '/');
-  const IMG_NORMAL = BASE + 'normal.png';
-  const IMG_OPEN   = BASE + 'open.png';
+    // Init App & ID
+    function initApp() {
+      if (myId) {
+        loadingOverlay.style.display = 'none';
+        loadScore();
+      } else {
+        // Show nickname modal
+        const btn = document.getElementById('nickname-btn');
+        const input = document.getElementById('nickname-input');
+        btn.onclick = () => {
+          let val = input.value.trim();
+          if (val) {
+            myId = val.substring(0, 8);
+            localStorage.setItem('my_game_id', myId);
+            loadingOverlay.style.display = 'none';
+            loadScore();
+          }
+        };
+      }
+    }
 
-  // 이미지 미리 로드
-  const preloadOpen = new Image(); preloadOpen.src = IMG_OPEN;
+    function loadScore() {
+      const saved = localStorage.getItem('personal_score');
+      if (saved) { personalScore = parseInt(saved, 10); }
+      myScoreEl.innerText = personalScore;
+    }
 
-  // Handle Press (Open Mouth)
-  function handlePress(e) {
-    if(e.type === 'touchstart' && e.cancelable) e.preventDefault();
+    // 이미지 절대경로로 미리 저장
+    const BASE = location.href.replace(/\/[^/]*$/, '/');
+    const IMG_NORMAL = BASE + 'normal.png';
+    const IMG_OPEN = BASE + 'open.png';
 
-    // 1. 이미지 교체 (가장 먼저!)
-    avatarEl.src = IMG_OPEN;
-    avatarEl.classList.add('clicked');
+    // 이미지 미리 로드
+    const preloadOpen = new Image(); preloadOpen.src = IMG_OPEN;
 
-    // 2. 사운드
-    playPopSound();
+    // Handle Press (Open Mouth)
+    function handlePress(e) {
+      if (e.type === 'touchstart' && e.cancelable) e.preventDefault();
 
-    // 3. 점수
-    personalScore++;
-    pendingClicks++;
-    myScoreEl.innerText = personalScore;
-    localStorage.setItem('personal_score', personalScore);
+      // 1. 이미지 교체 (가장 먼저!)
+      avatarEl.src = IMG_OPEN;
+      avatarEl.classList.add('clicked');
 
-    // 4. 파티클 (에러나도 이미지 교체에 영향 없게 try-catch)
-    try { createFloatingParticle(e); } catch(_) {}
-  }
+      // 2. 사운드
+      playPopSound();
 
-  // Handle Release (Close Mouth)
-  function handleRelease(e) {
-    avatarEl.src = IMG_NORMAL;
-    avatarEl.classList.remove('clicked');
-  }
+      // 3. 점수
+      personalScore++;
+      pendingClicks++;
+      myScoreEl.innerText = personalScore;
+      localStorage.setItem('personal_score', personalScore);
 
-  function createFloatingParticle(e) {
-    let x, y;
-    if(e.type === 'touchstart') {
+      // 4. 파티클 (에러나도 이미지 교체에 영향 없게 try-catch)
+      try { createFloatingParticle(e); } catch (_) { }
+    }
+
+    // Handle Release (Close Mouth)
+    function handleRelease(e) {
+      avatarEl.src = IMG_NORMAL;
+      avatarEl.classList.remove('clicked');
+    }
+
+    function createFloatingParticle(e) {
+      let x, y;
+      if (e.type === 'touchstart') {
         x = e.touches[0].clientX;
         y = e.touches[0].clientY;
-    } else {
+      } else {
         x = e.clientX;
         y = e.clientY;
+      }
+
+      const el = document.createElement('div');
+      el.innerText = '+1';
+      el.style.position = 'absolute';
+      el.style.left = (x - 20) + 'px';
+      el.style.top = (y - 20) + 'px';
+      el.style.fontSize = '2rem';
+      el.style.fontWeight = 'bold';
+      el.style.color = '#ff4757';
+      el.style.pointerEvents = 'none';
+      el.style.transition = 'all 0.5s ease-out';
+      document.body.appendChild(el);
+
+      // Trigger tick
+      setTimeout(() => {
+        el.style.transform = 'translateY(-100px) scale(1.5)';
+        el.style.opacity = '0';
+      }, 10);
+
+      setTimeout(() => { document.body.removeChild(el); }, 500);
     }
-    
-    const el = document.createElement('div');
-    el.innerText = '+1';
-    el.style.position = 'absolute';
-    el.style.left = (x - 20) + 'px';
-    el.style.top = (y - 20) + 'px';
-    el.style.fontSize = '2rem';
-    el.style.fontWeight = 'bold';
-    el.style.color = '#ff4757';
-    el.style.pointerEvents = 'none';
-    el.style.transition = 'all 0.5s ease-out';
-    document.body.appendChild(el);
-    
-    // Trigger tick
-    setTimeout(() => {
-      el.style.transform = 'translateY(-100px) scale(1.5)';
-      el.style.opacity = '0';
-    }, 10);
-    
-    setTimeout(() => { document.body.removeChild(el); }, 500);
-  }
 
-  // Events
-  avatarEl.addEventListener('mousedown', handlePress);
-  window.addEventListener('mouseup', handleRelease);
-  avatarEl.addEventListener('touchstart', handlePress, {passive: false});
-  window.addEventListener('touchend', handleRelease);
-  window.addEventListener('touchcancel', handleRelease);
+    // Events
+    avatarEl.addEventListener('mousedown', handlePress);
+    window.addEventListener('mouseup', handleRelease);
+    avatarEl.addEventListener('touchstart', handlePress, { passive: false });
+    window.addEventListener('touchend', handleRelease);
+    window.addEventListener('touchcancel', handleRelease);
 
-  // Socket communication
-  
-  // Every 300ms, if there are pending clicks, batch send them to the server
-  setInterval(() => {
-    if (pendingClicks > 0) {
-      socket.emit('add_clicks', {
-        country: myCountryCode,
-        count: pendingClicks
-      });
-      pendingClicks = 0;
-    }
-  }, 300);
+    // Socket communication
 
-  // Receive leaderboard updates
-  socket.on('leaderboard_update', (data) => {
-    globalClicksEl.innerText = data.totalClicks.toLocaleString();
-    
-    // Render ranking
-    rankListEl.innerHTML = '';
-    data.ranking.forEach((entry, index) => {
-       const li = document.createElement('li');
-       li.className = 'rank-item';
-       
-       let rankSticker = (index + 1) + '위';
-       if(index === 0) rankSticker = '🥇';
-       if(index === 1) rankSticker = '🥈';
-       if(index === 2) rankSticker = '🥉';
+    // Every 300ms, if there are pending clicks, batch send them to the server
+    setInterval(() => {
+      if (pendingClicks > 0 && myId) {
+        socket.emit('add_clicks', {
+          id: myId,  // Changed from country
+          count: pendingClicks
+        });
+        pendingClicks = 0;
+      }
+    }, 300);
 
-       li.innerHTML = `
+    // Receive leaderboard updates
+    socket.on('leaderboard_update', (data) => {
+      globalClicksEl.innerText = data.totalClicks.toLocaleString();
+
+      // Render ranking
+      rankListEl.innerHTML = '';
+      data.ranking.forEach((entry, index) => {
+        const li = document.createElement('li');
+        li.className = 'rank-item';
+
+        let rankSticker = (index + 1) + '위';
+        if (index === 0) rankSticker = '🥇';
+        if (index === 1) rankSticker = '🥈';
+        if (index === 2) rankSticker = '🥉';
+
+        li.innerHTML = `
           <div class="rank-country">
             <span style="width: 40px; text-align: center;">${rankSticker}</span>
-            <span>${getFlagEmoji(entry.code)}</span>
-            <span>${entry.code}</span>
+            <span style="font-weight: bold;">${entry.id}</span>
           </div>
           <div class="rank-score">${entry.score.toLocaleString()} 팝</div>
        `;
-       
-       // highlight my country if it matches
-       if(entry.code === myCountryCode) {
-         li.style.borderLeft = '5px solid #EFB344';
-       }
-       
-       rankListEl.appendChild(li);
-    });
-  });
 
-  // Init
-  detectCountry();
-</script>
+        // highlight my ID if it matches
+        if (entry.id === myId) {
+          li.style.borderLeft = '5px solid #EFB344';
+        }
+
+        rankListEl.appendChild(li);
+      });
+    });
+
+    // Init
+    initApp();
+  </script>
 </body>
+
 </html>
